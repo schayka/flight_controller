@@ -64,26 +64,11 @@ void setup() {
 
 }
 
+int motor_gain = 0;
+
 void loop() {
 
-    if(counter < 20)
-    {
-        analogWrite(motor_br,0);
-        counter++;
-    }
-    else if(counter < 30) {
-        analogWrite(motor_br,10);
-        counter++;
-    }
-    else if(counter < 60) {
-        analogWrite(motor_br,0);
-        counter++;
-    }
-    else {
-        analogWrite(motor_br,0);
 
-        return;
-    }
 
     if (radio.available()) {
         Serial.println("radio available");
@@ -92,44 +77,27 @@ void loop() {
         Serial.println("radio unavailable");
     }
 
-
-
     if (radio.available()) {
-
         radio.read(&data, sizeof(data));
-
-
-        // char text[32] = "";
-        // radio.read(&text, sizeof(text));
-        // Serial.println(text);
-
         if(data.throttle > 135)
         {
-            Serial.println(" throttle > 135 ");
+            motor_gain = data.throttle / 9;
+            motor_gain = constrain(motor_gain, 0, 255);
 
-
-//        analogWrite(motor_fl,10);
-//        analogWrite(motor_fr,10);
-//        analogWrite(motor_bl,10);
-//            if(counter < 5)
-//            {
-//                analogWrite(motor_br,5);
-//                counter++;
-//            }
-//            else {
-//                analogWrite(motor_br,0);
-//            }
-
+            Serial.print(" throttle > 135 |  ");
+            Serial.println(motor_gain);
+            analogWrite(motor_fl,motor_gain);
+            analogWrite(motor_fr,motor_gain);
+            analogWrite(motor_bl,motor_gain);
+            analogWrite(motor_br,motor_gain);
         }
         else
         {
-//        analogWrite(motor_fl,0);
-//        analogWrite(motor_fr,0);
-//        analogWrite(motor_bl,0);
-//        analogWrite(motor_br,0);
+            analogWrite(motor_fl,0);
+            analogWrite(motor_fr,0);
+            analogWrite(motor_bl,0);
+            analogWrite(motor_br,0);
         }
-
-
     }
 
     Serial.print("throttle : ");
@@ -144,8 +112,5 @@ void loop() {
     Serial.print(data.AUX1);
     Serial.print(" / AUX2 : ");
     Serial.println(data.AUX2);
-
-
-
 
 }
