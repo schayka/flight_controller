@@ -6,12 +6,11 @@
 */
 
 #include <SPI.h>
+#include <Wire.h>
 #include "ext/RF24/nRF24L01.h"
 #include "ext/RF24/RF24.h"
 
 RF24 radio(7, 10); // CE, CSN
-
-const byte address[6] = "00001";
 
 struct TransmitterInData {
     byte throttle;
@@ -22,6 +21,8 @@ struct TransmitterInData {
     byte AUX2;
 };
 
+const byte address[6] = "00001";
+
 int motor_fl = 6;
 int motor_fr = 9;
 int motor_bl = 5;
@@ -29,8 +30,43 @@ int motor_br = 3;
 
 int motor_gain = 0;
 
+double RateRoll, RatePitch, RateYaw;
 
 TransmitterInData data;
+
+void gyro_signals()
+{
+    // start I2C communication
+    Wire.beginTransmission(0x68);
+    // turn on low pass filter
+    Wire.write(0x1A);
+    Wire.write(0x05);
+    // finish I2C communication
+    Wire.endTransmission();
+
+    // set the sensitivity scale factor
+    Wire.beginTransmission(0x68);
+    Wire.write(0x1B);
+    Wire.write(0x8);
+    Wire.endTransmission();
+
+    // access registers storing gyro measurements
+
+    Wire.beginTransmission(0x68);
+    Wire.write(0x43);
+    Wire.endTransmission();
+
+    // get the data
+
+    Wire.requestFrom(0x68,6);
+    int16_t GyroX=Wire.read()<<8 | Wire.read();
+    int16_t GyroY=Wire.read()<<8 | Wire.read();
+    int16_t GyroZ=Wire.read()<<8 | Wire.read();
+    RateRoll=(float)GyroX/65.5;
+    RatePitch=(float)GyroY/65.5;
+    RateYaw=(float)GyroZ/65.5;
+
+}
 
 void reset_data()
 {
@@ -104,6 +140,14 @@ void setup() {
     radio.setPALevel(RF24_PA_MIN);
     radio.startListening();
 
+    Wire.begin();
+    delay(250);
+
+    Wire.beginTransmission(0x68);
+    Wire.write(0x6B);
+    Wire.write(0x00);
+    Wire.endTransmission();
+
 }
 
 void loop() {
@@ -117,4 +161,12 @@ void loop() {
 
     test_motors();
     view_TransmitterInData();
+
+    gyro_signals();
+    Serial.print("Roll rate [°/s]= ");
+    Serial.print(RateRoll);
+    Serial.print(" Pitch Rate [°/s]= ");
+    Serial.print(RatePitch);
+    Serial.print(" Yaw Rate [°/s]= ");
+    Serial.println(RateYaw);
 }
