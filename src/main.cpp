@@ -128,6 +128,7 @@ void loop() {
 //    view_TransmitterInData();
 
     gyro.update_data();
-    gyro.view_data();
-
+//    gyro.view_data_gyro();
+//    gyro.view_data_acc_g();
+//    gyro.view_data_acc_angles();
 }
