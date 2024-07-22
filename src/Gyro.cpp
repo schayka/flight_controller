@@ -8,6 +8,76 @@ void Gyro::setup()
     AccYErr = 0.0;
     AccZErr = 0.0;
 
+    this->mpu6050_init();
+
+    calibrate();
+}
+
+void Gyro::update_data(bool calibration)
+{
+    mpu6050_update_data(calibration);
+}
+
+void Gyro::calibrate()
+{
+    // todo works for both bigger and lower values?
+    for(i = 0;
+        i < 2000; i++)
+    {
+        update_data(true);
+        gCalibrationX += gX;
+        gCalibrationY += gY;
+        gCalibrationZ += gZ;
+        delay(1);
+    }
+    gCalibrationX /= 2000;
+    gCalibrationY /= 2000;
+    gCalibrationZ /= 2000;
+}
+
+void Gyro::view_gyro()
+{
+    // todo need to begin Serial  ?
+    Serial.print("RollRate[°/s]= ");
+    Serial.print(gX);
+    Serial.print(" PitchRate[°/s]= ");
+    Serial.print(gY);
+    Serial.print(" YawRate[°/s]= ");
+    Serial.println(gZ);
+}
+
+void Gyro::view_gyro_angles()
+{
+    Serial.print("X angle [°]= ");
+    Serial.print(gAngleX);
+    Serial.print(" Y angle [°]= ");
+    Serial.print(gAngleY);
+    Serial.print(" Z angle [°]= ");
+    Serial.println(gAngleZ);
+}
+
+void Gyro::view_acc()
+{
+    // todo need to begin Serial  ?
+    Serial.print("Acceleration X [g]= ");
+    Serial.print(AccX);
+    Serial.print(" Acceleration Y [g]= ");
+    Serial.print(AccY);
+    Serial.print(" Acceleration Z [g]= ");
+    Serial.println(AccZ);
+}
+
+void Gyro::view_acc_angles()
+{
+    Serial.print("X angle [°]= ");
+    Serial.print(AngleRoll);
+    Serial.print(" Y angle [°]= ");
+    Serial.println(AnglePitch);
+}
+
+// MPU-6050
+void Gyro::mpu6050_init()
+{
     // Начало передачи на устройство с адресом 0x68 (MPU-6050)
     Wire.beginTransmission(0x68);
     // Адрес регистра питания (PWR_MGMT_1)
@@ -16,11 +86,9 @@ void Gyro::setup()
     Wire.write(0x00);
     // Завершение передачи
     Wire.endTransmission();
-
-    calibrate();
 }
 
-void Gyro::update_data(bool calibration)
+void Gyro::mpu6050_update_data(bool calibration)
 {
     // Начало передачи на устройство с адресом 0x68 (MPU-6050)
     Wire.beginTransmission(0x68);
@@ -46,13 +114,34 @@ void Gyro::update_data(bool calibration)
 
     // get the data from registers storing gyro measurements
     Wire.requestFrom(0x68,6);
-    GyroX=Wire.read()<<8 | Wire.read();
-    GyroY=Wire.read()<<8 | Wire.read();
-    GyroZ=Wire.read()<<8 | Wire.read();
+    gRawX=Wire.read()<<8 | Wire.read();
+    gRawY=Wire.read()<<8 | Wire.read();
+    gRawZ=Wire.read()<<8 | Wire.read();
+
     // Full Scale Range: ± 500 °/s, LSB Sensitivity: 65.5 LSB/°/s
-    RateRoll= ( (float)GyroX/65.5 ) - ( calibration ? 0 : RateCalibrationRoll );
-    RatePitch=( (float)GyroY/65.5 ) - ( calibration ? 0 : RateCalibrationPitch );
-    RateYaw=( (float)GyroZ/65.5 ) - ( calibration ? 0 : RateCalibrationYaw );
+    gX = ( (float)gRawX/65.5 ) - (calibration ? 0 : gCalibrationX );
+    gY= ((float)gRawY / 65.5 ) - (calibration ? 0 : gCalibrationY );
+    gZ= ((float)gRawZ / 65.5 ) - (calibration ? 0 : gCalibrationZ );
+
+    // integrate to get current g angles
+
+    if(calibration == false)
+    {
+        currentTime = micros();
+        if(previousTime == 0) previousTime = currentTime;
+//    Serial.print(gX);
+//    Serial.print('/');
+//    Serial.print((currentTime - previousTime));
+//    Serial.print('/');
+//    Serial.println(( (currentTime - previousTime) / 1000000.0 ) );
+        gAngleX = gAngleX + ( gX * ( (currentTime - previousTime) / 1000000.0 ) );
+        gAngleY = gAngleY + ( gY * ( (currentTime - previousTime) / 1000000.0 ) );
+        gAngleZ = gAngleZ + ( gZ * ( (currentTime - previousTime) / 1000000.0 ) );
+        previousTime = currentTime;
+    }
+
+
+
 
     // конфигурация вывода акселерометра
     Wire.beginTransmission(0x68);
@@ -71,7 +160,7 @@ void Gyro::update_data(bool calibration)
     Wire.requestFrom(0x68,6);
     AccXLSB = Wire.read() << 8 | Wire.read();
     AccYLSB = Wire.read() << 8 | Wire.read();
-    AccZLSB = Wire.read() << 8  | Wire.read();
+    AccZLSB = Wire.read() << 8 | Wire.read();
 
     // Full Scale Range: ±8g, LSB Sensitivity: 4096 LSB/g
     // AccX/Y/Z/Err - measurement error, setting manually for each mpu module
@@ -84,48 +173,3 @@ void Gyro::update_data(bool calibration)
     AnglePitch=-atan(AccX/sqrt(AccY*AccY+AccZ*AccZ))*1/(3.142/180);
 }
 
-void Gyro::calibrate()
-{
-    for(i = 0;
-        i < 2000; i++)
-    {
-        update_data(true);
-        RateCalibrationRoll += RateRoll;
-        RateCalibrationPitch += RatePitch;
-        RateCalibrationYaw += RateYaw;
-        delay(1);
-    }
-    RateCalibrationRoll /= 2000;
-    RateCalibrationPitch /= 2000;
-    RateCalibrationYaw /= 2000;
-}
-
-void Gyro::view_data_gyro()
-{
-    // todo need to begin Serial  ?
-    Serial.print("Roll rate [°/s]= ");
-    Serial.print(RateRoll);
-    Serial.print(" Pitch Rate [°/s]= ");
-    Serial.print(RatePitch);
-    Serial.print(" Yaw Rate [°/s]= ");
-    Serial.println(RateYaw);
-}
-
-void Gyro::view_data_acc_g()
-{
-    // todo need to begin Serial  ?
-    Serial.print("Acceleration X [g]= ");
-    Serial.print(AccX);
-    Serial.print(" Acceleration Y [g]= ");
-    Serial.print(AccY);
-    Serial.print(" Acceleration Z [g]= ");
-    Serial.println(AccZ);
-}
-
-void Gyro::view_data_acc_angles()
-{
-    Serial.print("Roll angle [°]= ");
-    Serial.print(AngleRoll);
-    Serial.print(" Pitch angle [°]= ");
-    Serial.println(AnglePitch);
-}

@@ -5,10 +5,13 @@
 
 struct Gyro {
 
-    float RateRoll, RatePitch, RateYaw;
-    int16_t GyroX, GyroY, GyroZ;
-    float RateCalibrationRoll = 0, RateCalibrationPitch = 0, RateCalibrationYaw = 0;
+    int16_t gRawX, gRawY, gRawZ;
+    float gX, gY, gZ;
+    float gCalibrationX = 0, gCalibrationY = 0, gCalibrationZ = 0;
+    // todo flat surface only ?
+    float gAngleX = 0, gAngleY = 0, gAngleZ = 0;
     int i;
+    unsigned long previousTime = 0, currentTime;
 
     int16_t AccXLSB,AccYLSB,AccZLSB;
     float AccX, AccY, AccZ;
@@ -19,13 +22,20 @@ struct Gyro {
 
     void update_data(bool calibration = false);
 
-    void view_data_gyro();
+    void view_gyro();
 
-    void view_data_acc_g();
+    void view_gyro_angles();
 
-    void view_data_acc_angles();
+    void view_acc();
+
+    void view_acc_angles();
 
     void calibrate();
+
+    void mpu6050_init();
+
+    void mpu6050_update_data(bool calibration);
+
 };
 
 

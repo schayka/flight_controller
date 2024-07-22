@@ -14,6 +14,8 @@
 RF24 radio(7, 10); // CE, CSN
 Gyro gyro = Gyro();
 
+uint32_t LoopTimer;
+
 struct TransmitterInData {
     byte throttle;
     byte yaw;
@@ -128,7 +130,7 @@ void loop() {
 //    view_TransmitterInData();
 
     gyro.update_data();
-//    gyro.view_data_gyro();
-//    gyro.view_data_acc_g();
-//    gyro.view_data_acc_angles();
+//    gyro.view_gyro();
+    gyro.view_gyro_angles();
+
 }
