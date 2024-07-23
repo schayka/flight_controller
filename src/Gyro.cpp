@@ -48,22 +48,26 @@ void Gyro::view_gyro()
 
 void Gyro::view_gyro_angles()
 {
-    Serial.print("X angle [°]= ");
+    Serial.print("X_angle_[deg]:");
     Serial.print(gAngleX);
-    Serial.print(" Y angle [°]= ");
+    Serial.print(" ");
+    Serial.print("Y_angle_[deg]:");
     Serial.print(gAngleY);
-    Serial.print(" Z angle [°]= ");
+    Serial.print(" ");
+    Serial.print("Z_angle_[deg]:");
     Serial.println(gAngleZ);
 }
 
 void Gyro::view_acc()
 {
     // todo need to begin Serial  ?
-    Serial.print("Acceleration X [g]= ");
+    Serial.print("Acceleration_X_[g]:");
     Serial.print(AccX);
-    Serial.print(" Acceleration Y [g]= ");
+    Serial.print(" ");
+    Serial.print("Acceleration_Y_[g]:");
     Serial.print(AccY);
-    Serial.print(" Acceleration Z [g]= ");
+    Serial.print(" ");
+    Serial.print("Acceleration_Z_[g]:");
     Serial.println(AccZ);
 }
 
