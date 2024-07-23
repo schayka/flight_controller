@@ -14,8 +14,6 @@
 RF24 radio(7, 10); // CE, CSN
 Gyro gyro = Gyro();
 
-uint32_t LoopTimer;
-
 struct TransmitterInData {
     byte throttle;
     byte yaw;
@@ -26,11 +24,6 @@ struct TransmitterInData {
 };
 
 const byte address[6] = "00001";
-
-float pid_p_gain_roll = 1.4;
-float pid_i_gain_roll = 0.04;
-float pid_d_gain_roll = 15.0;
-int pid_max_roll = 400;
 
 int motor_fl = 6;
 int motor_fr = 9;
@@ -117,7 +110,6 @@ void setup() {
     radio.startListening();
 
     gyro.setup();
-
 }
 
 void loop() {
@@ -135,6 +127,6 @@ void loop() {
     gyro.update_data();
 //    gyro.view_gyro();
 //    gyro.view_gyro_angles();
-    gyro.view_acc_angles();
+//    gyro.view_acc_angles();
 
 }

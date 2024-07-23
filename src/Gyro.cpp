@@ -48,35 +48,36 @@ void Gyro::view_gyro()
 
 void Gyro::view_gyro_angles()
 {
-    Serial.print("X_angle_[deg]:");
+    Serial.print("gX_angle_[deg]:");
     Serial.print(gAngleX);
     Serial.print(" ");
-    Serial.print("Y_angle_[deg]:");
+    Serial.print("gY_angle_[deg]:");
     Serial.print(gAngleY);
     Serial.print(" ");
-    Serial.print("Z_angle_[deg]:");
+    Serial.print("gZ_angle_[deg]:");
     Serial.println(gAngleZ);
 }
 
 void Gyro::view_acc()
 {
     // todo need to begin Serial  ?
-    Serial.print("Acceleration_X_[g]:");
-    Serial.print(AccX);
+    Serial.print("aX_[g]:");
+    Serial.print(aX);
     Serial.print(" ");
-    Serial.print("Acceleration_Y_[g]:");
-    Serial.print(AccY);
+    Serial.print("aY_[g]:");
+    Serial.print(aY);
     Serial.print(" ");
-    Serial.print("Acceleration_Z_[g]:");
-    Serial.println(AccZ);
+    Serial.print("aZ_[g]:");
+    Serial.println(aZ);
 }
 
 void Gyro::view_acc_angles()
 {
-    Serial.print("X angle [°]= ");
-    Serial.print(AngleRoll);
-    Serial.print(" Y angle [°]= ");
-    Serial.println(AnglePitch);
+    Serial.print("aX_angle_[deg]:");
+    Serial.print(aAngleX);
+    Serial.print(" ");
+    Serial.print("aY_angle_[deg]:");
+    Serial.println(aAngleY);
 }
 
 // MPU-6050
@@ -133,19 +134,11 @@ void Gyro::mpu6050_update_data(bool calibration)
     {
         currentTime = micros();
         if(previousTime == 0) previousTime = currentTime;
-//    Serial.print(gX);
-//    Serial.print('/');
-//    Serial.print((currentTime - previousTime));
-//    Serial.print('/');
-//    Serial.println(( (currentTime - previousTime) / 1000000.0 ) );
         gAngleX = gAngleX + ( gX * ( (currentTime - previousTime) / 1000000.0 ) );
         gAngleY = gAngleY + ( gY * ( (currentTime - previousTime) / 1000000.0 ) );
         gAngleZ = gAngleZ + ( gZ * ( (currentTime - previousTime) / 1000000.0 ) );
         previousTime = currentTime;
     }
-
-
-
 
     // конфигурация вывода акселерометра
     Wire.beginTransmission(0x68);
@@ -162,18 +155,17 @@ void Gyro::mpu6050_update_data(bool calibration)
 
     // get data from register storing accelerometer values
     Wire.requestFrom(0x68,6);
-    AccXLSB = Wire.read() << 8 | Wire.read();
-    AccYLSB = Wire.read() << 8 | Wire.read();
-    AccZLSB = Wire.read() << 8 | Wire.read();
+    aRawX = Wire.read() << 8 | Wire.read();
+    aRawY = Wire.read() << 8 | Wire.read();
+    aRawZ = Wire.read() << 8 | Wire.read();
 
     // Full Scale Range: ±8g, LSB Sensitivity: 4096 LSB/g
     // AccX/Y/Z/Err - measurement error, setting manually for each mpu module
-    AccX = ( (float)AccXLSB / 4096 ) + AccXErr;
-    AccY = ( (float)AccYLSB / 4096 ) + AccYErr;
-    AccZ = ( (float)AccZLSB / 4096 ) + AccZErr;
+    aX = ( (float)aRawX / 4096 ) + AccXErr;
+    aY = ( (float)aRawY / 4096 ) + AccYErr;
+    aZ = ( (float)aRawZ / 4096 ) + AccZErr;
 
     // todo не понимаю эти формулы угла через проекции на 3 оси
-    AngleRoll=atan(AccY/sqrt(AccX*AccX+AccZ*AccZ))*1/(3.142/180);
-    AnglePitch=-atan(AccX/sqrt(AccY*AccY+AccZ*AccZ))*1/(3.142/180);
+    aAngleX=atan(aY/sqrt(aX*aX+aZ*aZ))*1/(3.142/180);
+    aAngleY=-atan(aX/sqrt(aY*aY+aZ*aZ))*1/(3.142/180);
 }
-
