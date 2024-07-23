@@ -125,8 +125,10 @@ void loop() {
 //    view_TransmitterInData();
 
     gyro.update_data();
+    gyro.update_complementary_filter();
 //    gyro.view_gyro();
 //    gyro.view_gyro_angles();
 //    gyro.view_acc_angles();
-
+//    gyro.view_cf_angles();
+    gyro.view_angles();
 }

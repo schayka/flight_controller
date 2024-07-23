@@ -80,6 +80,27 @@ void Gyro::view_acc_angles()
     Serial.println(aAngleY);
 }
 
+void Gyro::view_cf_angles()
+{
+    Serial.print("cfX_angle_[deg]:");
+    Serial.print(cfAngleX);
+    Serial.print(" ");
+    Serial.print("cfX2_angle_[deg]:");
+    Serial.println(cfAngleY);
+}
+
+void Gyro::view_angles(bool x, bool y)
+{
+    Serial.print("gAngleX_[deg]:");
+    Serial.print(gAngleX);
+    Serial.print(" ");
+    Serial.print("aAngleX_[deg]:");
+    Serial.print(aAngleX);
+    Serial.print(" ");
+    Serial.print("cfAngle_X_[deg]:");
+    Serial.println(cfAngleX);
+}
+
 // MPU-6050
 void Gyro::mpu6050_init()
 {
@@ -168,4 +189,19 @@ void Gyro::mpu6050_update_data(bool calibration)
     // todo не понимаю эти формулы угла через проекции на 3 оси
     aAngleX=atan(aY/sqrt(aX*aX+aZ*aZ))*1/(3.142/180);
     aAngleY=-atan(aX/sqrt(aY*aY+aZ*aZ))*1/(3.142/180);
+}
+
+// source: https://cyberleninka.ru/article/n/komplementarnyy-filtr-dlya-otsenki-ugla-s-ispolzovaniem-mikroelektromehanicheskoy-sistemy-giroskopa-i-akselerometra/viewer
+// todo ? http://mgsys.kpi.ua/article/view/268465/265776
+void Gyro::update_complementary_filter()
+{
+    if(cfPrevTime == 0) cfPrevTime = micros();
+    cfCurrentTime = micros();
+
+    cfAngleX = cfK * ( cfAngleX + gX * ( ( cfCurrentTime - cfPrevTime ) / 1000000.0 ) )
+            + (1 - cfK) * aAngleX;
+
+    cfAngleY = cfK * ( cfAngleY + gY * ( ( cfCurrentTime - cfPrevTime ) / 1000000.0 ) )
+            + (1 - cfK) * aAngleY;
+    cfPrevTime = currentTime;
 }
