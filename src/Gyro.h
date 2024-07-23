@@ -13,9 +13,9 @@ struct Gyro {
     int i;
     unsigned long previousTime = 0, currentTime;
 
-    int16_t AccXLSB,AccYLSB,AccZLSB;
-    float AccX, AccY, AccZ;
-    float AngleRoll, AnglePitch;
+    int16_t aRawX,aRawY,aRawZ;
+    float aX, aY, aZ;
+    float aAngleX, aAngleY;
     float AccXErr, AccYErr, AccZErr;
 
     void setup();
